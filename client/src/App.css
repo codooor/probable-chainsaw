@@ -156,3 +156,29 @@ Scorecard
 .scorecard tbody tr:nth-child(even) {
   background-color: #f2f2f2;
 }
+
+/*
+=========================
+Scorecard Input Styles
+=========================
+*/
+.scorecard input[type="number"] {
+  text-align: center;
+  width: 40%;
+  padding: 4px 8px;
+  border: 1px solid var(--primary-color);
+  border-radius: 4px;
+  font-size: 14px;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  transition: border-color 0.3s;
+}
+
+.scorecard input[type="number"]:focus {
+  outline: none;
+  border-color: var(--secondary-color);
+}
+
+button:hover {
+  background-color: var(--primary-color);
+}

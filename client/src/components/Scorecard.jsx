@@ -1,12 +1,17 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-import SingleHoleEdit from "./SingleHoleEdit";
-
-export default function Scorecard({ onGoBack, courseId, selectedTees }) {
-  const [selectedCourse, setSelectedCourse] = useState(null); // state slice for selected course
-  const [selectedTeeColor, setSelectedTeeColor] = useState(null); // state slice for selected tee color from course
+export default function Scorecard({
+  onGoBack,
+  courseId,
+  selectedTees,
+  newRoundId,
+}) {
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [selectedTeeColor, setSelectedTeeColor] = useState(null);
   const [courseData, setCourseData] = useState(null);
+  const [roundId, setRoundId] = useState(null);
+  const [scores, setScores] = useState({}); // This will store hole scores.
 
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -15,24 +20,27 @@ export default function Scorecard({ onGoBack, courseId, selectedTees }) {
     if (!courseId) return;
 
     setLoading(true);
-    console.log("Starting console log:", courseId);
     axios
       .get(`http://localhost:7777/golf-courses/${courseId}`)
       .then((res) => {
-        console.log("Payload from:", res.data);
         setCourseData(res.data);
         setSelectedCourse(res.data.data);
         setSelectedTeeColor(selectedTees);
-
+        setRoundId(newRoundId);
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Error Fetching Data: ", err.message);
         setError(err.message);
-
         setLoading(false);
       });
-  }, [courseId]);
+  }, [courseId, newRoundId, selectedTees]);
+
+  const handleScoreChange = (holeNumber, e) => {
+    setScores({
+      ...scores,
+      [holeNumber]: e.target.value,
+    });
+  };
 
   if (loading) return <div> ...Finding Zen </div>;
 
@@ -53,25 +61,32 @@ export default function Scorecard({ onGoBack, courseId, selectedTees }) {
             <th>Yardage</th>
             <th>Par</th>
             <th>HDCP</th>
+            <th>Score</th>
           </tr>
         </thead>
         <tbody>
           {selectedCourse?.holeDetails.map((hole) => {
             const tee = hole.tees.find((t) => t.color === selectedTeeColor);
-
             return (
               <tr key={hole._id}>
                 <td>{hole.holeNumber}</td>
                 <td>{tee?.length || "-"}</td>
                 <td>{tee?.par || "-"}</td>
                 <td>{tee?.handicap || "-"}</td>
+                <td>
+                  <input
+                    type="number"
+                    value={scores[hole.holeNumber] || ""}
+                    onChange={(e) => handleScoreChange(hole.holeNumber, e)}
+                    placeholder="Enter score"
+                  />
+                </td>
               </tr>
             );
           })}
           <tr>
             <td>Total</td>
             <td>
-              {/* calculating total length of all holes by checking againsts the selected tee color */}
               {selectedCourse &&
                 selectedCourse.holeDetails.reduce((acc, courseHole) => {
                   const tee = courseHole.tees.find(
@@ -81,7 +96,6 @@ export default function Scorecard({ onGoBack, courseId, selectedTees }) {
                 }, 0)}
             </td>
             <td>
-              {/* calculating total par of all holes by checking againsts the selected tee color */}
               {selectedCourse &&
                 selectedCourse.holeDetails.reduce((acc, courseHole) => {
                   const tee = courseHole.tees.find(
@@ -91,18 +105,16 @@ export default function Scorecard({ onGoBack, courseId, selectedTees }) {
                 }, 0)}
             </td>
             <td>-</td>
+            <td>
+              {Object.values(scores).reduce(
+                (acc, score) => acc + Number(score),
+                0
+              )}
+            </td>
           </tr>
         </tbody>
       </table>
       <button onClick={onGoBack}>Change Course</button>
-      {Array.isArray(courseData?.scoreDetails) &&
-        courseData?.scoreDetails.map((holeScore, index) => (
-          <SingleHoleEdit
-            key={index}
-            holeScore={holeScore}
-            courseId={courseId}
-          />
-        ))}
     </div>
   );
 }

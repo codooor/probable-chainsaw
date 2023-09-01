@@ -84,6 +84,7 @@ export default function StartRound() {
         onGoBack={resetRound}
         courseId={selectedCourse._id}
         selectedTees={selectedTees}
+        newRoundId={selectedRoundId}
       />
     );
   }
